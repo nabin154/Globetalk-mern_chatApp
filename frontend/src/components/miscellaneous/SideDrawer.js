@@ -36,8 +36,7 @@ import NearbyUsers from "../userAvatar/NearbyUsers";
 import UserListItem from "../userAvatar/UserListItem";
 
 import { ChatState } from "../../Context/ChatProvider";
-const socket = io.connect("http://localhost:5000");
-
+const socket = io.connect("http://localhost:8080");
 
 function SideDrawer() {
   const [search, setSearch] = useState("");
@@ -47,7 +46,7 @@ function SideDrawer() {
   const [nearbyFriends, setNearbyFriends] = useState([]);
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
-   const [initialFetchDone, setInitialFetchDone] = useState(false);
+  const [initialFetchDone, setInitialFetchDone] = useState(false);
 
   const {
     setSelectedChat,
@@ -74,7 +73,7 @@ function SideDrawer() {
   };
 
   const logoutHandler = () => {
-    socket.emit("logout",user);
+    socket.emit("logout", user);
     localStorage.removeItem("userInfo");
     setUser(null);
     setChats([]);
@@ -143,35 +142,33 @@ function SideDrawer() {
   };
 
   useEffect(() => {
-    if(flag){
-  
-    const fetchNearbyFriends = async () => {
-      try {
-        const config = {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        };
+    if (flag) {
+      const fetchNearbyFriends = async () => {
+        try {
+          const config = {
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+            },
+          };
 
-        const response = await axios.get("/api/user/nearbyusers", {
-          params: {
-            maxDistance: 5,
-          },
-          headers: config.headers,
-        });
+          const response = await axios.get("/api/user/nearbyusers", {
+            params: {
+              maxDistance: 15,
+            },
+            headers: config.headers,
+          });
 
-        setNearbyFriends(response.data);
-        setInitialFetchDone(true);
-      } catch (error) {
-        console.error("Error fetching nearby friends:", error);
+          setNearbyFriends(response.data);
+          setInitialFetchDone(true);
+        } catch (error) {
+          console.error("Error fetching nearby friends:", error);
+        }
+      };
+
+      if (!initialFetchDone && flag) {
+        fetchNearbyFriends();
       }
-    };
-
-  
-    if (!initialFetchDone && flag) {
-      fetchNearbyFriends();
     }
-  }
   }, [flag, postLocation]);
 
   const handleSearch = async () => {
@@ -266,7 +263,7 @@ function SideDrawer() {
         </Tooltip>
         <Text
           fontSize={{ base: "none", md: "2xl", lg: "4xl" }}
-          display={{base:"none", md:'none',lg:'inline'}}
+          display={{ base: "none", md: "none", lg: "inline" }}
           fontFamily="Agbalumo"
           fontWeight="600"
           letterSpacing="1.9px"

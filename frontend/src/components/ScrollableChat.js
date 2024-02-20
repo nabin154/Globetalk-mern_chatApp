@@ -22,7 +22,8 @@ function generateKey(chatId) {
   const chatIdString = chatId.toString();
   return CryptoJS.SHA256(chatIdString).toString();
 }
-// Decryption function
+
+
 function Decrypt(word, chatId) {
   const encryptionKey = generateKey(chatId);
   const decData = CryptoJS.enc.Base64.parse(word).toString(CryptoJS.enc.Utf8);
@@ -33,6 +34,7 @@ function Decrypt(word, chatId) {
 }
 
   const [showOriginalMap, setShowOriginalMap] = useState({});
+   const [sentimentIcons, setSentimentIcons] = useState({});
 
   function toggleOriginal(messageId) {
     setShowOriginalMap((prevShowOriginalMap) => ({
@@ -46,9 +48,52 @@ function Decrypt(word, chatId) {
       chatContainerRef.current.scrollTop =
         chatContainerRef.current.scrollHeight;
     }
+    // messages.forEach((message) => {
+    //   if (!sentimentIcons[message._id]) {
+    //     fetchSentiment(Decrypt(message.content, message.chat._id), message._id);
+    //   }
+    // });
   }, [messages]);
 
-  const source = localStorage.getItem("source");
+//  const fetchSentiment = async (text, messageId) => {
+//    try {
+//      const response = await fetch("http://localhost:5000/analyze", {
+//        method: "POST",
+//        headers: {
+//          "Content-Type": "application/json",
+//        },
+//        body: JSON.stringify({ text }),
+//      });
+
+//      if (response.ok) {
+//        const result = await response.json();
+//        const sentiment = result.sentiment;
+//        console.log(sentiment);
+
+//        setSentimentIcons((prevSentimentIcons) => ({
+//          ...prevSentimentIcons,
+//          [messageId]: sentiment,
+//        }));
+//      } else {
+//        console.error("Failed to fetch sentiment:", response.statusText);
+//      }
+//    } catch (error) {
+//      console.error("Error fetching sentiment:", error);
+//    }
+//  };
+
+ const getSentimentEmoji = (sentiment) => {
+   switch (sentiment) {
+     case "Positive":
+       return "😊";
+     case "Negative":
+       return "😢";
+     default:
+       return "-";
+   }
+ };
+
+
 
   return (
     <div
@@ -76,8 +121,17 @@ function Decrypt(word, chatId) {
 
             <div
               style={{
+                // backgroundColor: `${
+                //   m.sender._id === user._id ? "#4E65FF" : "#4b6584"
+                // }`,
                 backgroundColor: `${
-                  m.sender._id === user._id ? "#4E65FF" : "#4b6584"
+                  m.sender._id === user._id
+                    ? "#4E65FF"
+                    : m.sentiment === "Positive"
+                    ? "#78e08f" // Green for Positive
+                    : m.sentiment === "Negative"
+                    ? "#e55039" // Red for Negative
+                    : "#4b6584"
                 }`,
                 marginLeft: isSameSenderMargin(messages, m, i, user._id),
                 marginTop: isSameUser(messages, m, i, user._id) ? 4 : 10,
@@ -126,6 +180,11 @@ function Decrypt(word, chatId) {
                 </button>
               )}
             </div>
+            {sentimentIcons[m._id] && m.sender._id !== user._id && (
+              <div style={{ marginLeft: "6px", alignSelf: "center" }}>
+                {getSentimentEmoji(m.sentiment)}
+              </div>
+            )}
           </div>
         ))}
     </div>

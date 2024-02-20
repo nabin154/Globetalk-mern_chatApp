@@ -14,7 +14,7 @@ import { PhoneIcon, AddIcon } from "@chakra-ui/icons";
 import io from "socket.io-client";
 import { ChatState } from "../../Context/ChatProvider";
 const Peer = window.SimplePeer;
-const socket = io.connect("http://localhost:5000");
+const socket = io.connect("http://localhost:8080");
 
 function VideoModal({
   receiverId,
@@ -119,8 +119,6 @@ function VideoModal({
     connectionRef.current = peer;
   };
 
-
-
   const leaveCall = () => {
     setReceivingCall(false);
     setCallEnded(true);
@@ -145,7 +143,7 @@ function VideoModal({
       audioTracks.forEach((track) => track.stop());
     }
     setFetchAgain(!fetchAgain);
-  socket.emit("endCall", { to: caller });
+    socket.emit("endCall", { to: caller });
     onClose();
   };
 

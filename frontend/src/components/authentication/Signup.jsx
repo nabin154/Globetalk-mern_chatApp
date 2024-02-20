@@ -1,31 +1,29 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@chakra-ui/button";
 import { Select } from "@chakra-ui/react";
 import { FormControl, FormLabel } from "@chakra-ui/form-control";
 import { Input, InputGroup, InputRightElement } from "@chakra-ui/input";
 import { VStack } from "@chakra-ui/layout";
 import axios from "axios";
-import { useState, useEffect } from "react";
 import { useToast } from "@chakra-ui/toast";
 import { useHistory } from "react-router-dom";
 import { ChatState } from "../../Context/ChatProvider";
 
-const Login = () => {
-  const [show, setShow] = useState();
-  const [name, setName] = useState();
-  const [email, setEmail] = useState();
-  const [password, setPassword] = useState();
-  const [confirmpassword, setConfirmpassword] = useState();
-  const [pic, setPic] = useState();
+const SignUp = () => {
+  const [show, setShow] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmpassword, setConfirmpassword] = useState("");
+  const [pic, setPic] = useState("");
   const [picLoading, setPicLoading] = useState(false);
-  const [Language, setSelectedLanguage] = useState();
-  const [languages, setLanguages] = useState();
+  const [Language, setSelectedLanguage] = useState("");
+  const [languages, setLanguages] = useState([]);
   const { setSelectedChat } = ChatState();
 
-  const handleClick = () => setShow(!show);
   const toast = useToast();
   const history = useHistory();
-
+  const handleClick = () => setShow(!show);
   useEffect(() => {
     fetch("/api/user/languages")
       .then((response) => response.json())
@@ -42,24 +40,73 @@ const Login = () => {
     setSelectedLanguage(newLanguage);
   };
 
-  const submitHandler = async () => {
-    localStorage.removeItem("source");
-    setSelectedChat(null);
-    setPicLoading(true);
+
+   const validatePassword = (password) => {
+    
+     const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{6,}$/;
+     return passwordRegex.test(password);
+   };
+
+  const validateForm = () => {
     if (!name || !email || !password || !confirmpassword) {
       toast({
-        title: "Please Fill all the Feilds",
+        title: "Please Fill all the Fields",
         status: "warning",
         duration: 5000,
         isClosable: true,
         position: "top",
       });
-      setPicLoading(false);
-      return;
+      return false;
     }
+
     if (password !== confirmpassword) {
       toast({
         title: "Passwords Do Not Match",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+      });
+      return false;
+    }
+
+    if (!validatePassword(password)) {
+      toast({
+        title:
+          "Password validation failed !!",
+          description:"Password Should Be At Least 6 Characters With One Uppercase And One Numeric Value",
+        status: "warning",
+        duration: 7000,
+        isClosable: true,
+        position: "top",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+   
+
+
+  const submitHandler = async () => {
+    localStorage.removeItem("source");
+    setSelectedChat(null);
+    setPicLoading(true);
+
+    if (!validateForm()) {
+      setPicLoading(false);
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      toast({
+        title: "Invalid Email Address",
         status: "warning",
         duration: 5000,
         isClosable: true,
@@ -92,8 +139,8 @@ const Login = () => {
       history.push("/chats");
     } catch (error) {
       toast({
-        title: "Error Occured!",
-        description: error.response.data.message,
+        title: "Error Occurred!",
+        description: error.response?.data?.message || "Unknown error",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -105,7 +152,8 @@ const Login = () => {
 
   const postDetails = (pics) => {
     setPicLoading(true);
-    if (pics === undefined) {
+
+    if (!pics) {
       toast({
         title: "Please Select an Image!",
         status: "warning",
@@ -115,12 +163,13 @@ const Login = () => {
       });
       return;
     }
-    console.log(pics);
+
     if (pics.type === "image/jpeg" || pics.type === "image/png") {
       const data = new FormData();
       data.append("file", pics);
       data.append("upload_preset", "globetalk");
       data.append("cloud_name", "dobmlogth");
+
       fetch("https://api.cloudinary.com/v1_1/dobmlogth/image/upload", {
         method: "post",
         body: data,
@@ -128,7 +177,6 @@ const Login = () => {
         .then((res) => res.json())
         .then((data) => {
           setPic(data.url.toString());
-          // console.log(data.url.toString());
           setPicLoading(false);
         })
         .catch((err) => {
@@ -238,4 +286,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default SignUp;

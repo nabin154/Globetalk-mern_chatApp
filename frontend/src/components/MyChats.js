@@ -45,7 +45,7 @@ const MyChats = ({ fetchAgain }) => {
     return JSON.parse(bytes);
   }
   useEffect(() => {
-    const socket = io("http://localhost:5000");
+    const socket = io("http://localhost:8080");
     socket.emit("user connected", loggedUser);
     socket.on("online users", (users) => {
       setOnlineUsers(users);
@@ -54,10 +54,9 @@ const MyChats = ({ fetchAgain }) => {
       socket.disconnect();
     };
   }, [loggedUser]);
-const isUserOnline = (userId) => {
-  return onlineUsers.some((userArray) => userArray[1]._id === userId);
-};
-
+  const isUserOnline = (userId) => {
+    return onlineUsers.some((userArray) => userArray[1]._id === userId);
+  };
 
   const fetchChats = async () => {
     try {

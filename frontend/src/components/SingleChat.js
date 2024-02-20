@@ -19,7 +19,7 @@ import ScrollableChat from "./ScrollableChat";
 import { ChatState } from "../Context/ChatProvider";
 import io from "socket.io-client";
 import UpdateGroupChatModal from "./miscellaneous/UpdateGroupChatModal";
-const ENDPOINT = "http://localhost:5000";
+const ENDPOINT = "http://localhost:8080";
 const Peer = window.SimplePeer;
 
 var socket, selectedChatCompare;
@@ -33,7 +33,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [socketConnected, setSocketConnected] = useState(false);
   const [typing, setTyping] = useState(false);
   const [istyping, setIsTyping] = useState(false);
-  const [room ,setRoom ]=useState('');
+  const [room, setRoom] = useState("");
   const toast = useToast();
   const [flag, setFlag] = useState(false);
   const [detectedLang, setDetectedLang] = useState();
@@ -78,8 +78,9 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       console.log(room);
       setRoom(data.room);
     });
-    socket.on("stop typing", (data) =>{
-       setIsTyping(false)});
+    socket.on("stop typing", (data) => {
+      setIsTyping(false);
+    });
     socket.on("incommingCall", (data) => {
       // console.log(data);
       setReceivingCall(true);
@@ -88,10 +89,10 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       setCallMethod(data.type);
       setShowCallingModal(true);
     });
-     return () => {
-       socket.off("typing");
-       socket.off("stop typing");
-     };
+    return () => {
+      socket.off("typing");
+      socket.off("stop typing");
+    };
   }, []);
 
   useEffect(() => {
@@ -194,7 +195,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       });
 
       socket.on("callAccepted", (data) => {
-        
         setCallAccepted(true);
         setCaller(data.from);
         peer.signal(data.signal);
@@ -219,37 +219,36 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
 
   useEffect(() => {
     socket.on("endCall", () => {
-   if (myVideo.current && myVideo.current.srcObject) {
-     const tracks = myVideo.current.srcObject.getTracks();
-     tracks.forEach((track) => track.stop());
-     myVideo.current.srcObject = null;
-   }
+      if (myVideo.current && myVideo.current.srcObject) {
+        const tracks = myVideo.current.srcObject.getTracks();
+        tracks.forEach((track) => track.stop());
+        myVideo.current.srcObject = null;
+      }
 
-   if (userVideo.current && userVideo.current.srcObject) {
-     const tracks = userVideo.current.srcObject.getTracks();
-     tracks.forEach((track) => track.stop());
-     userVideo.current.srcObject = null;
-   }
-   if (connectionRef.current) {
-     connectionRef.current.destroy();
-   }
-   if (stream) {
-     const audioTracks = stream.getAudioTracks();
-     audioTracks.forEach((track) => track.stop());
-     setStream(null);
-   }
-    toast({
-      title: "Your receiver ended the call !",
-      status: "warning",
-      duration: 4000,
-      isClosable: true,
-      position: "top",
+      if (userVideo.current && userVideo.current.srcObject) {
+        const tracks = userVideo.current.srcObject.getTracks();
+        tracks.forEach((track) => track.stop());
+        userVideo.current.srcObject = null;
+      }
+      if (connectionRef.current) {
+        connectionRef.current.destroy();
+      }
+      if (stream) {
+        const audioTracks = stream.getAudioTracks();
+        audioTracks.forEach((track) => track.stop());
+        setStream(null);
+      }
+      toast({
+        title: "Your receiver ended the call !",
+        status: "warning",
+        duration: 4000,
+        isClosable: true,
+        position: "top",
+      });
     });
-    });
-     return () => {
-       socket.off("endCall");
-     };
-
+    return () => {
+      socket.off("endCall");
+    };
   }, [stream]);
 
   const handleEmojiClick = (emoji) => {
@@ -310,12 +309,10 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           setNewMessage(data.url.toString());
           console.log(data.url.toString());
           setPicLoading(false);
-
         })
         .catch((err) => {
           console.log(err);
           setPicLoading(false);
-
         });
     } else {
       toast({
@@ -325,11 +322,42 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         isClosable: true,
         position: "top",
       });
-          setPicLoading(false);
+      setPicLoading(false);
 
       return;
     }
   };
+
+
+
+  /////////////////////////sentiment 
+
+
+
+  const fetchSentiment = async (text) => {
+    try {
+      const response = await fetch("http://localhost:5000/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const sentiment = result.sentiment;
+        return sentiment;
+      } else {
+        console.error("Failed to fetch sentiment:", response.statusText);
+        return null; // or throw an error
+      }
+    } catch (error) {
+      console.error("Error fetching sentiment:", error);
+      return null; // or throw an error
+    }
+  };
+/////////////////
 
   const fetchMessages = async () => {
     if (!selectedChat) return;
@@ -416,7 +444,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           translatedMessage,
           selectedChat._id
         );
-
+ const sentiment = await fetchSentiment(newMessage);
         const { data } = await axios.post(
           "/api/message",
           {
@@ -424,6 +452,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             chatId: selectedChat._id,
             translatedContent: encryptedTranslatedContent,
             flag: flag,
+            sentiment: sentiment,
           },
           config
         );

@@ -24,10 +24,10 @@ app.use("/api/message", messageRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 const server = app.listen(
   PORT,
-  console.log("server started at port 5000".yellow.bold)
+  console.log("server started at port 8080".yellow.bold)
 );
 const onlineUsers = new Map();
 const io = require("socket.io")(server, {
@@ -52,7 +52,7 @@ io.on("connection", (socket) => {
     console.log("User Joined Room: " + room);
   });
   socket.on("typing", (room) => {
-    socket.in(room).emit("typing",{
+    socket.in(room).emit("typing", {
       room: room,
     });
   });
@@ -67,9 +67,9 @@ io.on("connection", (socket) => {
   });
 
   socket.on("answerCall", (data) => {
-    io.to(data.to).emit("callAccepted",{
-      signal:data.signal,
-      from:data.from
+    io.to(data.to).emit("callAccepted", {
+      signal: data.signal,
+      from: data.from,
     });
   });
 
@@ -78,7 +78,7 @@ io.on("connection", (socket) => {
   });
   /////////////
   socket.on("stop typing", (room) => {
-    socket.in(room).emit("stop typing",{
+    socket.in(room).emit("stop typing", {
       room: room,
     });
   });
@@ -94,27 +94,24 @@ io.on("connection", (socket) => {
       socket.in(user._id).emit("message recieved", newMessageRecieved);
     });
   });
- socket.on("logout", (userData) => {
-   const socketIdToRemove = Array.from(onlineUsers.entries()).find(
-     ([_, user]) => user._id === userData._id
-   )?.[0];
+  socket.on("logout", (userData) => {
+    const socketIdToRemove = Array.from(onlineUsers.entries()).find(
+      ([_, user]) => user._id === userData._id
+    )?.[0];
 
-   if (socketIdToRemove) {
-     onlineUsers.delete(socketIdToRemove);
-     io.emit("online users", Array.from(onlineUsers));
+    if (socketIdToRemove) {
+      onlineUsers.delete(socketIdToRemove);
+      io.emit("online users", Array.from(onlineUsers));
 
-     socket.leave(userData._id);
-
-   }
- });
-
+      socket.leave(userData._id);
+    }
+  });
 
   socket.on("disconnect", () => {
     onlineUsers.delete(socket.id);
     io.emit("online users", Array.from(onlineUsers));
   });
   socket.off("setup", () => {
-    
     console.log("USER DISCONNECTED");
     socket.leave(userData._id);
   });

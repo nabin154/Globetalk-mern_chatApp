@@ -33,11 +33,10 @@ const NearbyUsers = ({ user, handleFunction }) => {
       />
       <Box>
         <Text>{user.name}</Text>
-        <Text fontSize="xs" color={'darkred'}>
+        <Text fontSize="xs" color={"darkred"}>
           <b>-Near you </b>
-         
+          <b style={{marginLeft:'15px',fontSize:"12px"}}>{user.distance} K.M </b>
         </Text>
-       
       </Box>
 
       <ImLocation2

@@ -131,7 +131,7 @@ const updateLocation = asyncHandler(async (req, res) => {
 });
 
 function calculateHaversine(lat1, lon1, lat2, lon2) {
-  const R = 6371; // Earth's radius in kilometers
+  const R = 6371; 
   const dLat = (lat2 - lat1) * (Math.PI / 180);
   const dLon = (lon2 - lon1) * (Math.PI / 180);
   const a =
@@ -141,9 +141,8 @@ function calculateHaversine(lat1, lon1, lat2, lon2) {
       Math.sin(dLon / 2) *
       Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c; // Distance in kilometers
+  return R * c;
 }
-
 const getNearByUsers = asyncHandler(async (req, res) => {
   const user = req.user;
 
@@ -153,17 +152,31 @@ const getNearByUsers = asyncHandler(async (req, res) => {
 
   try {
     const users = await User.find().select("name location pic email");
-    const nearbyUsers = users.filter((user) => {
-      const distance = calculateHaversine(
-        userLatitude,
-        userLongitude,
-        user.location.coordinates[1], // Latitude
-        user.location.coordinates[0] // Longitude
-      );
-      return distance <= maxDistanceInKm;
-    });
+    const nearbyUsersWithDistance = users
+      .filter((user) => {
+        const distance = calculateHaversine(
+          userLatitude,
+          userLongitude,
+          user.location.coordinates[1],
+          user.location.coordinates[0]
+        );
+        return distance <= maxDistanceInKm;
+      })
+      .map((nearbyUser) => ({
+        _id: nearbyUser._id,
+        name: nearbyUser.name,
+        email: nearbyUser.email,
+        pic: nearbyUser.pic,
 
-    res.json(nearbyUsers);
+        distance: calculateHaversine(
+          userLatitude,
+          userLongitude,
+          nearbyUser.location.coordinates[1],
+          nearbyUser.location.coordinates[0]
+        ).toFixed(2),
+      }));
+
+    res.json(nearbyUsersWithDistance);
   } catch (error) {
     console.error("Error finding nearby users:", error);
     res.status(500).json({ error: "Error finding nearby users" });
