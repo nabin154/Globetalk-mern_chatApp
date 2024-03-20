@@ -133,6 +133,7 @@ const updateLocation = asyncHandler(async (req, res) => {
 function calculateHaversine(lat1, lon1, lat2, lon2) {
   const R = 6371; 
   const dLat = (lat2 - lat1) * (Math.PI / 180);
+  
   const dLon = (lon2 - lon1) * (Math.PI / 180);
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -174,6 +175,8 @@ const getNearByUsers = asyncHandler(async (req, res) => {
           nearbyUser.location.coordinates[1],
           nearbyUser.location.coordinates[0]
         ).toFixed(2),
+
+        
       }));
 
     res.json(nearbyUsersWithDistance);

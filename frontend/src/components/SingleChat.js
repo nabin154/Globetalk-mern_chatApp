@@ -19,9 +19,10 @@ import ScrollableChat from "./ScrollableChat";
 import { ChatState } from "../Context/ChatProvider";
 import io from "socket.io-client";
 import UpdateGroupChatModal from "./miscellaneous/UpdateGroupChatModal";
+import { fetchsentiment } from "./miscellaneous/sentiment/fetchSentiment";
 const ENDPOINT = "http://localhost:8080";
-const Peer = window.SimplePeer;
 
+const Peer = window.SimplePeer;
 var socket, selectedChatCompare;
 let path = "https://drive.google.com/uc?id=1mRKaplprzWrv4pbsvAdBZko7m4inWxc5";
 let audio = new Audio(path);
@@ -68,6 +69,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [showCallingModal, setShowCallingModal] = useState(false);
   const [callType, setCallType] = useState("video");
   const [callMethod, setCallMethod] = useState("");
+  const [mood, setMood] = useState(null);
+ 
 
   useEffect(() => {
     socket = io(ENDPOINT);
@@ -136,15 +139,86 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         if (!notification.includes(newMessageRecieved)) {
           setNotification([newMessageRecieved, ...notification]);
           setFetchAgain(!fetchAgain);
-          audio.play().catch((error) => {
-            console.error("Failed to play audio:", error);
-          });
+          // audio.play().catch((error) => {
+          //   console.error("Failed to play audio:", error);
+          // });
         }
       } else {
         setMessages([...messages, newMessageRecieved]);
       }
     });
   });
+
+useEffect(() => {
+  const fetchMessagesAndCalculateMood = async () => {
+    if (!selectedChat) return;
+    console.log("hello");
+    const sender = getSenderFull(user, selectedChat.users);
+    try {
+      const response = await axios.get(`/api/message/sender/${sender._id}`);
+      const messages = response.data.slice(0, 30); 
+      console.log(messages);
+
+      let positiveCount = 0;
+      let negativeCount = 0;
+      let neutralCount = 0;
+
+      for (let message of messages) {
+        if (message.sentiment === "Positive") {
+          positiveCount++;
+        } else if (message.sentiment === "Negative") {
+          negativeCount++;
+        } else if (message.sentiment === "Neutral") {
+          neutralCount++;
+        }
+      }
+
+      let calculatedMood;
+      if (messages.length > 5) {
+        if (positiveCount > negativeCount && positiveCount > neutralCount) {
+          calculatedMood = "happy";
+        } else if(negativeCount > positiveCount && negativeCount > neutralCount) {
+          calculatedMood = "not happy";
+        } 
+        else{
+          calculatedMood = "neutral"
+        }
+      } else {
+        calculatedMood = "mood loading..";
+      }
+
+      setMood(calculatedMood);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  };
+
+  
+  fetchMessagesAndCalculateMood();
+  const intervalId = setInterval(fetchMessagesAndCalculateMood, 2 * 60 * 1000);
+
+  
+  return () => clearInterval(intervalId);
+}, [selectedChat]);
+
+
+ const getSentimentEmoji = (sentiment) => {
+   switch (sentiment) {
+     case "happy":
+       return "😊";
+     case "not happy":
+       return "😢";
+     default:
+       return " ";
+   }
+ };
+
+
+
+
+
+
+
 
   const openVideoModal = () => {
     setCallType("video");
@@ -328,36 +402,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     }
   };
 
-
-
-  /////////////////////////sentiment 
-
-
-
-  const fetchSentiment = async (text) => {
-    try {
-      const response = await fetch("http://localhost:5000/analyze", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ text }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        const sentiment = result.sentiment;
-        return sentiment;
-      } else {
-        console.error("Failed to fetch sentiment:", response.statusText);
-        return null; // or throw an error
-      }
-    } catch (error) {
-      console.error("Error fetching sentiment:", error);
-      return null; // or throw an error
-    }
-  };
-/////////////////
+  
 
   const fetchMessages = async () => {
     if (!selectedChat) return;
@@ -444,7 +489,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           translatedMessage,
           selectedChat._id
         );
- const sentiment = await fetchSentiment(newMessage);
+        const sentiment = await fetchsentiment(newMessage);
+        // if(detectedLang != 'en' ){sentiment = 'Neutral'};
         const { data } = await axios.post(
           "/api/message",
           {
@@ -452,7 +498,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             chatId: selectedChat._id,
             translatedContent: encryptedTranslatedContent,
             flag: flag,
-            sentiment: sentiment,
+            sentiment:  sentiment,
           },
           config
         );
@@ -550,6 +596,9 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             {!selectedChat.isGroupChat ? (
               <>
                 {getSender(user, selectedChat.users)}
+                <h4 style={{
+                  fontSize:'12px',
+                }}>- {mood} {getSentimentEmoji(mood)}</h4>
 
                 <IconButton
                   as="span"

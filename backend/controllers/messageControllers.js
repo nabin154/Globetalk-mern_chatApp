@@ -54,4 +54,28 @@ const sendMessage = async (req, res) => {
   }
 };
 
-module.exports = { allMessages, sendMessage };
+const getSenderMessage =  async (req, res) => {
+  try {
+    const senderId = req.params.id;
+
+    // Get the current time
+    const currentTime = new Date();
+
+    // Calculate the time 30 minutes ago
+    const thirtyMinutesAgo = new Date(currentTime - 30 * 60 * 1000);
+
+    // Query messages sent by the sender within the last 30 minutes
+    const messages = await Message.find({
+      sender: senderId,
+      createdAt: { $gte: thirtyMinutesAgo, $lte: currentTime }
+    });
+
+    res.json(messages);
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+module.exports = { allMessages, sendMessage, getSenderMessage };

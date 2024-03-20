@@ -180,7 +180,7 @@ function Decrypt(word, chatId) {
                 </button>
               )}
             </div>
-            {sentimentIcons[m._id] && m.sender._id !== user._id && (
+            {  m.sender._id !== user._id && (
               <div style={{ marginLeft: "6px", alignSelf: "center" }}>
                 {getSentimentEmoji(m.sentiment)}
               </div>

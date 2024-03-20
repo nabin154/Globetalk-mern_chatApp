@@ -153,7 +153,7 @@ function SideDrawer() {
 
           const response = await axios.get("/api/user/nearbyusers", {
             params: {
-              maxDistance: 15,
+              maxDistance: 20,
             },
             headers: config.headers,
           });

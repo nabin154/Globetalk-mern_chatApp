@@ -12,18 +12,18 @@ import {
 import { Box, Text } from "@chakra-ui/layout";
 
 import { ChatState } from "../../Context/ChatProvider";
-let path = "https://drive.google.com/uc?id=1ZKhEC9mITE226orcMDxqM0uzvPDME5J3";
-let audio = new Audio(path);
+// let path = "https://drive.google.com/uc?id=1ZKhEC9mITE226orcMDxqM0uzvPDME5J3";
+// let audio = new Audio(path);
 
 const CallingModal = ({ isOpen, onClose, onAnswer, caller, callMethod }) => {
   const { onlineUsers } = ChatState();
 
   useEffect(() => {
     if (isOpen) {
-      audio.play();
+      // audio.play();
     } else {
-      audio.pause();
-      audio.currentTime = 0;
+      // audio.pause();
+      // audio.currentTime = 0;
     }
   }, [isOpen]);
 
