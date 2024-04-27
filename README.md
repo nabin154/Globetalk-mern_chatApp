@@ -29,7 +29,12 @@
 
 GlobeTalk is an innovative and feature-rich chat application designed to connect users globally, breaking down language barriers and enhancing communication through real-time messaging, group chats, multimedia sharing, and secure audio-video calls. Built on the MERN stack (MongoDB, Express.js, React.js, Node.js), GlobeTalk integrates cutting-edge technologies to provide a seamless and dynamic chatting experience.
 
+Full demo : https://www.youtube.com/watch?v=5oi7KvmDW1g
 ## Key Features:
+
+### Mood Detection using sentiment analysis:
+- Detects the mood of the sender by detecting the sentiment of the sent messages.
+- Based on the positive, negative and neutral sentiment of the  latest messages within 30min , mood is displayed.
 
 #### Real-Time Messaging with Socket.io:
 
